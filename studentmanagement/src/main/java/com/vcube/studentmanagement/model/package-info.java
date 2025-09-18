@@ -1,0 +1,1 @@
+package com.vcube.studentmanagement.model;

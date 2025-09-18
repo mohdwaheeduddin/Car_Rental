@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Management Dashboard</title>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background: #f4f6f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      margin-top: 40px;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .btn {
+      border-radius: 25px;
+    }
+    #studentTable {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="text-center mb-4">🎓 Student Management</h1>
+
+  <!-- Action Buttons -->
+  <div class="text-center mb-4">
+    <button class="btn btn-primary mx-2" onclick="showForm('createForm')">➕ Add Student</button>
+    <button class="btn btn-warning mx-2" onclick="showForm('updateForm')">✏️ Update Student</button>
+    <button class="btn btn-danger mx-2" onclick="showForm('removeForm')">❌ Remove Student</button>
+    <button class="btn btn-dark mx-2" onclick="showForm('removeAllForm')">🔥 Remove All</button>
+  </div>
+
+  <!-- Student Table -->
+  <div class="card p-3">
+    <h3>Student List</h3>
+    <table class="table table-striped" id="studentTable">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Domain</th>
+        </tr>
+      </thead>
+      <tbody id="studentBody">
+        <!-- Data will be loaded dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Forms -->
+  <div id="formsContainer" class="mt-4">
+    <!-- Create -->
+    <div id="createForm" class="card p-3 d-none">
+      <h4>Add Student</h4>
+      <input type="text" id="createName" class="form-control mb-2" placeholder="Name">
+      <input type="number" id="createPhone" class="form-control mb-2" placeholder="Phone">
+      <input type="text" id="createDomain" class="form-control mb-2" placeholder="Domain">
+      <button class="btn btn-success" onclick="createStudent()">Add</button>
+    </div>
+
+    <!-- Update -->
+    <div id="updateForm" class="card p-3 d-none">
+      <h4>Update Student</h4>
+      <input type="number" id="updateId" class="form-control mb-2" placeholder="ID">
+      <input type="text" id="updateName" class="form-control mb-2" placeholder="New Name">
+      <input type="number" id="updatePhone" class="form-control mb-2" placeholder="New Phone">
+      <input type="text" id="updateDomain" class="form-control mb-2" placeholder="New Domain">
+      <button class="btn btn-warning" onclick="updateStudent()">Update</button>
+    </div>
+
+    <!-- Remove -->
+    <div id="removeForm" class="card p-3 d-none">
+      <h4>Remove Student</h4>
+      <input type="number" id="removeId" class="form-control mb-2" placeholder="ID">
+      <button class="btn btn-danger" onclick="removeStudent()">Remove</button>
+    </div>
+
+    <!-- Remove All -->
+    <div id="removeAllForm" class="card p-3 d-none">
+      <h4>Remove All Students</h4>
+      <input type="text" id="removeAllConfirm" class="form-control mb-2" placeholder="Type 'yes' to confirm">
+      <button class="btn btn-dark" onclick="removeAll()">Remove All</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show only one form at a time
+  function showForm(formId) {
+    document.querySelectorAll('#formsContainer > div').forEach(div => div.classList.add('d-none'));
+    document.getElementById(formId).classList.remove('d-none');
+  }
+
+  // Load all students
+  async function loadStudents() {
+    const res = await fetch("/");
+    const html = await res.text();
+    // Server still returns Thymeleaf model, but for a pure REST feel
+    // you could expose /api/students returning JSON and use that here.
+  }
+
+  // Example using JSON endpoints
+  async function fetchStudents() {
+    const res = await fetch("/api/students"); // make a GET endpoint returning JSON
+    const data = await res.json();
+    let rows = "";
+    data.forEach(stu => {
+      rows += `<tr>
+                 <td>${stu.id}</td>
+                 <td>${stu.name}</td>
+                 <td>${stu.phone}</td>
+                 <td>${stu.domain}</td>
+               </tr>`;
+    });
+    document.getElementById("studentBody").innerHTML = rows;
+  }
+
+  // CRUD functions
+  async function createStudent() {
+    await fetch("/create", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        name: document.getElementById("createName").value,
+        phone: document.getElementById("createPhone").value,
+        domain: document.getElementById("createDomain").value
+      })
+    });
+    fetchStudents();
+  }
+
+  async function updateStudent() {
+    await fetch("/update", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        id: document.getElementById("updateId").value,
+        name: document.getElementById("updateName").value,
+        phone: document.getElementById("updatePhone").value,
+        domain: document.getElementById("updateDomain").value
+      })
+    });
+    fetchStudents();
+  }
+
+  async function removeStudent() {
+    await fetch("/remove", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({id: document.getElementById("removeId").value})
+    });
+    fetchStudents();
+  }
+
+  async function removeAll() {
+    await fetch("/remove/all", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({confirmation: document.getElementById("removeAllConfirm").value})
+    });
+    fetchStudents();
+  }
+
+  // Initial load
+  fetchStudents();
+</script>
+
+</body>
+</html>
