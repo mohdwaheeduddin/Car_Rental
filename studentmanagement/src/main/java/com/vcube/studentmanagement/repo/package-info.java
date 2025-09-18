@@ -1,1 +1,0 @@
-package com.vcube.studentmanagement.repo;
